@@ -305,7 +305,8 @@
     if (modal && !modal.dataset.kbFoco) {
       modal.dataset.kbFoco = '1';
       setTimeout(function () {
-        var input = Array.prototype.slice.call(modal.querySelectorAll('input')).filter(visivel)[0];
+        // pula o campo "Nome do produto": o foco vai direto para o preco
+        var input = Array.prototype.slice.call(modal.querySelectorAll('input:not(.nome-produto-input)')).filter(visivel)[0];
         if (input) focar(input, true);
         else focar(modal.querySelector('.modal-actions .btn.primary'));
       }, 0);
