@@ -20,6 +20,17 @@
 (function () {
   'use strict';
 
+  // Dentro do iframe do Uniplus: fundo transparente e clique fora do painel fecha a janela
+  var embutido = window.self !== window.top;
+  if (embutido) {
+    document.documentElement.classList.add('kb-embutido');
+    document.addEventListener('mousedown', function (e) {
+      if (/^(HTML|BODY|APP-ROOT|APP-VENDAS)$/.test(e.target.tagName)) {
+        try { window.parent.postMessage('tv-fechar', '*'); } catch (err) { /* sem pai */ }
+      }
+    });
+  }
+
   // ---------- estilos ----------
   var css = [
     '.suggestions button.kb-ativo,.product-results button.kb-ativo,.modal-results button.kb-ativo{',
@@ -47,6 +58,10 @@
     '#kb-ajuda td:first-child{white-space:nowrap;font-weight:700;width:90px}',
     '#kb-ajuda p{margin:12px 0 0;font-size:12px;color:#5e6c84}',
     '.kb-oculto{display:none!important}',
+    /* aberta dentro do Uniplus (iframe): so o painel da tela aparece, sem o fundo */
+    'html.kb-embutido,html.kb-embutido body,html.kb-embutido app-root,html.kb-embutido app-vendas{background:transparent!important}',
+    'html.kb-embutido .page-shell{background:#f4f7fb;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.35);margin:12px auto 56px!important}',
+    'html.kb-embutido #kb-barra{max-width:1440px;margin:0 auto;border-radius:10px 10px 0 0}',
     '.topbar{display:flex;align-items:center}',
     '#kb-novo{margin-left:auto;margin-right:12px;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:0;border-radius:8px;',
     '  background:#fff;color:#172b4d;font:700 12px/1 Inter,Roboto,Segoe UI,sans-serif;letter-spacing:.04em;cursor:pointer;',
