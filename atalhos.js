@@ -44,7 +44,11 @@
     '#kb-ajuda table{width:100%;border-collapse:collapse}',
     '#kb-ajuda td{padding:5px 4px;border-bottom:1px solid #e3e6ec;vertical-align:top}',
     '#kb-ajuda td:first-child{white-space:nowrap;font-weight:700;width:90px}',
-    '#kb-ajuda p{margin:12px 0 0;font-size:12px;color:#5e6c84}'
+    '#kb-ajuda p{margin:12px 0 0;font-size:12px;color:#5e6c84}',
+    '.kb-oculto{display:none!important}',
+    '.observation textarea.obs-extra{display:block;width:100%;margin-top:10px;min-height:64px;resize:vertical;',
+    '  border:1px solid #c4c6d0;border-radius:8px;padding:10px 12px;font:inherit;font-size:14px;color:inherit;background:#fff}',
+    '.observation textarea.obs-extra:focus{outline:2px solid #005cbb;outline-offset:-1px;border-color:#005cbb}'
   ].join('\n');
   var style = document.createElement('style');
   style.id = 'kb-estilos';
@@ -193,7 +197,9 @@
     // Janela de preco/quantidade
     if (modal) {
       ev.preventDefault();
-      var inputs = Array.prototype.slice.call(modal.querySelectorAll('input')).filter(visivel);
+      // Nome do produto e Rastreio sao opcionais: ficam fora da sequencia do Enter
+      var inputs = Array.prototype.slice.call(modal.querySelectorAll('input:not(.nome-produto-input):not(.rastreio-input)')).filter(visivel);
+      if (el.classList.contains('nome-produto-input') && inputs.length) { focar(inputs[0], true); return; }
       var i = inputs.indexOf(el);
       if (i >= 0 && i < inputs.length - 1) { focar(inputs[i + 1], true); return; }
       var ok = modal.querySelector('.modal-actions .btn.primary');
@@ -306,7 +312,7 @@
       modal.dataset.kbFoco = '1';
       setTimeout(function () {
         // pula o campo "Nome do produto": o foco vai direto para o preco
-        var input = Array.prototype.slice.call(modal.querySelectorAll('input:not(.nome-produto-input)')).filter(visivel)[0];
+        var input = Array.prototype.slice.call(modal.querySelectorAll('input:not(.nome-produto-input):not(.rastreio-input)')).filter(visivel)[0];
         if (input) focar(input, true);
         else focar(modal.querySelector('.modal-actions .btn.primary'));
       }, 0);
