@@ -34,9 +34,22 @@
   .ignoradas { font-size: 13px; color: #5e6c84; margin-top: 12px; }
   .ignoradas li { margin: 2px 0; }
   .hidden { display: none; }
+
+  /* Aberta dentro do Uniplus (iframe do Tampermonkey): só o painel aparece, o resto fica translúcido */
+  html.embutido, html.embutido body { background: transparent !important; }
+  html.embutido body { min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; }
+  html.embutido .painel { width: 100%; max-width: 760px; background: #f4f7fb; border-radius: 12px; overflow: hidden;
+                          box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+  html.embutido main { margin: 0; padding: 16px; max-width: none; }
+  html.embutido .card:last-child { margin-bottom: 0; }
 </style>
+<script>
+  // Marca antes de desenhar a página para não piscar o fundo branco
+  if (window.self !== window.top) document.documentElement.classList.add('embutido');
+</script>
 </head>
 <body>
+<div class="painel">
 <header class="topbar"><span class="tab">FICHA TÉCNICA</span></header>
 <main>
   <section class="card">
@@ -58,6 +71,7 @@
     <div id="ignoradas" class="ignoradas"></div>
   </section>
 </main>
+</div>
 
 <script>
 (function () {
@@ -112,6 +126,21 @@
     }
     resultado.classList.remove('hidden');
   }
+
+  // Aberta dentro do WebUniPlus (Tampermonkey): Esc fecha a janela sobreposta
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && window.parent !== window) window.parent.postMessage('tv-fechar', '*');
+  });
+
+  if (window.self !== window.top) {
+    document.addEventListener('mousedown', function (ev) {
+      if (ev.target === document.body || ev.target === document.documentElement) window.parent.postMessage('tv-fechar', '*');
+    });
+  }
+
+  // ?codigo=123 já preenche o campo
+  var pre = (location.search.match(/[?&]codigo=(\d+)/) || [])[1];
+  if (pre) campo.value = pre;
 
   form.addEventListener('submit', function (ev) {
     ev.preventDefault();
