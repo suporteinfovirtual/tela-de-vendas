@@ -10,7 +10,6 @@
  *   F3        Ir para a busca de produto pai
  *   F4        Adicionar filho ao item selecionado
  *   F8        Editar item selecionado
- *   F5        Novo pedido: zera tudo e recarrega os dados do banco
  *   F9        Voltar para o campo Cliente
  *   Del       Excluir item selecionado (fora de campos de texto, pede confirmacao)
  *   Enter     Proximo campo / escolhe o item destacado da lista
@@ -19,17 +18,6 @@
  */
 (function () {
   'use strict';
-
-  // Dentro do iframe do Uniplus: fundo transparente e clique fora do painel fecha a janela
-  var embutido = window.self !== window.top;
-  if (embutido) {
-    document.documentElement.classList.add('kb-embutido');
-    document.addEventListener('mousedown', function (e) {
-      if (/^(HTML|BODY|APP-ROOT|APP-VENDAS)$/.test(e.target.tagName)) {
-        try { window.parent.postMessage('tv-fechar', '*'); } catch (err) { /* sem pai */ }
-      }
-    });
-  }
 
   // ---------- estilos ----------
   var css = [
@@ -56,21 +44,7 @@
     '#kb-ajuda table{width:100%;border-collapse:collapse}',
     '#kb-ajuda td{padding:5px 4px;border-bottom:1px solid #e3e6ec;vertical-align:top}',
     '#kb-ajuda td:first-child{white-space:nowrap;font-weight:700;width:90px}',
-    '#kb-ajuda p{margin:12px 0 0;font-size:12px;color:#5e6c84}',
-    '.kb-oculto{display:none!important}',
-    /* aberta dentro do Uniplus (iframe): so o painel da tela aparece, sem o fundo */
-    'html.kb-embutido,html.kb-embutido body,html.kb-embutido app-root,html.kb-embutido app-vendas{background:transparent!important}',
-    'html.kb-embutido .page-shell{background:#f4f7fb;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.35);margin:12px auto 56px!important}',
-    'html.kb-embutido #kb-barra{max-width:1440px;margin:0 auto;border-radius:10px 10px 0 0}',
-    '.topbar{display:flex;align-items:center}',
-    '#kb-novo{margin-left:auto;margin-right:12px;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:0;border-radius:8px;',
-    '  background:#fff;color:#172b4d;font:700 12px/1 Inter,Roboto,Segoe UI,sans-serif;letter-spacing:.04em;cursor:pointer;',
-    '  box-shadow:0 1px 3px rgba(0,0,0,.2)}',
-    '#kb-novo:hover{background:#dbe8ff}',
-    '#kb-novo small{font-weight:400;opacity:.7}',
-    '.observation textarea.obs-extra{display:block;width:100%;margin-top:10px;min-height:64px;resize:vertical;',
-    '  border:1px solid #c4c6d0;border-radius:8px;padding:10px 12px;font:inherit;font-size:14px;color:inherit;background:#fff}',
-    '.observation textarea.obs-extra:focus{outline:2px solid #005cbb;outline-offset:-1px;border-color:#005cbb}'
+    '#kb-ajuda p{margin:12px 0 0;font-size:12px;color:#5e6c84}'
   ].join('\n');
   var style = document.createElement('style');
   style.id = 'kb-estilos';
@@ -82,7 +56,6 @@
     ['F2', 'Gravar (enviar pedido)'],
     ['F3', 'Buscar produto'],
     ['F4', 'Adicionar filho'],
-    ['F5', 'Novo pedido (atualizar)'],
     ['F8', 'Editar item'],
     ['F9', 'Ir para Cliente'],
     ['Del', 'Excluir item'],
@@ -220,9 +193,7 @@
     // Janela de preco/quantidade
     if (modal) {
       ev.preventDefault();
-      // Nome do produto e Rastreio sao opcionais: ficam fora da sequencia do Enter
-      var inputs = Array.prototype.slice.call(modal.querySelectorAll('input:not(.nome-produto-input):not(.rastreio-input)')).filter(visivel);
-      if (el.classList.contains('nome-produto-input') && inputs.length) { focar(inputs[0], true); return; }
+      var inputs = Array.prototype.slice.call(modal.querySelectorAll('input')).filter(visivel);
       var i = inputs.indexOf(el);
       if (i >= 0 && i < inputs.length - 1) { focar(inputs[i + 1], true); return; }
       var ok = modal.querySelector('.modal-actions .btn.primary');
@@ -233,28 +204,6 @@
     if (el.tagName === 'TEXTAREA') return; // Enter quebra linha normalmente
     ev.preventDefault();
     proximoCampo(el);
-  }
-
-  // ---------- novo pedido ----------
-  // Recarrega a pagina inteira: zera o pedido e busca de novo produtos, clientes etc. no banco
-  function pedidoTemDados() {
-    var obs = document.querySelector('.obs-extra');
-    return linhasItens().length > 0 || !!(obs && obs.value.trim());
-  }
-  function novoPedido() {
-    if (pedidoTemDados() && !window.confirm('Descartar o pedido atual e começar um novo?\n\nOs dados do banco (produtos, clientes, preços) serão recarregados.')) return;
-    window.location.reload();
-  }
-  function montarBotaoNovo() {
-    var barra = document.querySelector('app-vendas .topbar');
-    if (!barra || document.getElementById('kb-novo')) return;
-    var b = document.createElement('button');
-    b.id = 'kb-novo';
-    b.type = 'button';
-    b.title = 'Zera o pedido e recarrega os dados do banco (F5)';
-    b.innerHTML = '&#x21bb; NOVO PEDIDO <small>(F5)</small>';
-    b.addEventListener('click', novoPedido);
-    barra.appendChild(b);
   }
 
   // ---------- teclado ----------
@@ -268,11 +217,6 @@
     var ajudaAberta = ajuda && ajuda.classList.contains('aberta');
 
     switch (ev.key) {
-      case 'F5':
-        ev.preventDefault();
-        novoPedido();
-        return;
-
       case 'F1':
         ev.preventDefault();
         alternarAjuda();
@@ -361,8 +305,7 @@
     if (modal && !modal.dataset.kbFoco) {
       modal.dataset.kbFoco = '1';
       setTimeout(function () {
-        // pula o campo "Nome do produto": o foco vai direto para o preco
-        var input = Array.prototype.slice.call(modal.querySelectorAll('input:not(.nome-produto-input):not(.rastreio-input)')).filter(visivel)[0];
+        var input = Array.prototype.slice.call(modal.querySelectorAll('input')).filter(visivel)[0];
         if (input) focar(input, true);
         else focar(modal.querySelector('.modal-actions .btn.primary'));
       }, 0);
@@ -426,7 +369,6 @@
     var on = !!tela();
     var barra = document.getElementById('kb-barra');
     if (on && !barra) montarBarra();
-    if (on) montarBotaoNovo();
     barra = document.getElementById('kb-barra');
     if (barra) barra.style.display = on ? '' : 'none';
     document.body.classList.toggle('kb-on', on);
