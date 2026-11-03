@@ -92,7 +92,7 @@
     ['Enter', 'Vai para o próximo campo. Numa lista de busca, escolhe o item destacado (ou o primeiro).'],
     ['↑ / ↓', 'Andam pela lista de busca aberta. Fora dos campos, andam pelos itens lançados.'],
     ['Enter no produto', 'Escolhe o produto e abre a janela de preço/quantidade.'],
-    ['Enter na janela', 'Preço → Quantidade → Confirmar.']
+    ['Enter na janela', 'Abre na Quantidade → Enter confirma. Para mudar o preço, clique nele (ou Shift+Tab).']
   ];
 
   // ---------- utilitarios ----------
@@ -361,8 +361,13 @@
     if (modal && !modal.dataset.kbFoco) {
       modal.dataset.kbFoco = '1';
       setTimeout(function () {
-        // pula o campo "Nome do produto": o foco vai direto para o preco
-        var input = Array.prototype.slice.call(modal.querySelectorAll('input:not(.nome-produto-input):not(.rastreio-input)')).filter(visivel)[0];
+        // o preco quase nunca muda: o foco vai direto para a quantidade, ja selecionada
+        // (sem campo de quantidade, cai no primeiro campo, como antes)
+        var inputs = Array.prototype.slice.call(modal.querySelectorAll('input:not(.nome-produto-input):not(.rastreio-input)')).filter(visivel);
+        var input = inputs.filter(function (i) {
+          var lbl = i.closest('label');
+          return lbl && /^\s*Quantidade/.test(lbl.textContent);
+        })[0] || inputs[0];
         if (input) focar(input, true);
         else focar(modal.querySelector('.modal-actions .btn.primary'));
       }, 0);
