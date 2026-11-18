@@ -256,7 +256,7 @@
     // devolve desconto 0: recupera pela diferenca entre bruto e precoTotal
     if (!perc && !desc) {
       var bruto = 0, liquido = 0;
-      d.itens.forEach(function (it) { bruto += numero(it.quantidade) * numero(it.precoUnitario); liquido += numero(it.precoTotal); });
+      d.itens.forEach(function (it) { bruto += Math.round(numero(it.quantidade) * numero(it.precoUnitario) * 100) / 100; liquido += numero(it.precoTotal); });
       if (liquido > 0 && bruto - liquido > 0.005) desc = Math.round((bruto - liquido) * 100) / 100;
     }
     setCampo('tv-desconto', perc ? String(perc).replace('.', ',') + '%' : (desc ? brl(desc) : ''));
